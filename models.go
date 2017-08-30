@@ -24,21 +24,23 @@ type PaymentURLRequest struct {
 	AllowRepeatedPayments bool   `json:"allow_repeated_payments"`
 }
 
-type unauthorized struct {
+// Unauthorized Response from Instamojo
+type Unauthorized struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
 }
 
-type badrequest struct {
+// BadRequest Response from Instamojo
+type BadRequest struct {
 	Success bool                     `json:"success"`
 	Message map[string][]interface{} `json:"message"`
 }
 
-func (u unauthorized) Error() string {
+func (u Unauthorized) Error() string {
 	return u.Message
 }
 
-func (b badrequest) Error() string {
+func (b BadRequest) Error() string {
 
 	for _, v := range b.Message {
 		return v[0].(string)
@@ -46,7 +48,7 @@ func (b badrequest) Error() string {
 	return "instamojo: bad request"
 }
 
-type paymenturlok struct {
+type PaymentURLResponse struct {
 	PaymentRequest struct {
 		ID                    string    `json:"id"`
 		Phone                 string    `json:"phone"`
@@ -70,6 +72,7 @@ type paymenturlok struct {
 	Success bool `json:"success"`
 }
 
+// WebhookResponse is the data that Instamojo sends to the webhook
 type WebhookResponse struct {
 	PaymentID        string `json:"payment_id"`
 	Status           string `json:"status"`

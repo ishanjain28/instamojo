@@ -1,3 +1,5 @@
+// This package aims to provide a Wrapper for instamojo.com's API
+// It is a work in progress and all remaining endpoints shall be added soon
 package instamojo
 
 import (
@@ -9,6 +11,7 @@ import (
 	"strings"
 )
 
+// Init initialises a new Config from the provided settings
 func Init(c *Config) (*Config, error) {
 	if c.ApiKey == "" || c.AuthToken == "" {
 		return nil, fmt.Errorf("invalid tokens")
@@ -23,6 +26,7 @@ func Init(c *Config) (*Config, error) {
 	return c, nil
 }
 
+// ParseWebhookResponse parses the urlencoded response that instamojo sends to the webhook
 func ParseWebhookResponse(u url.Values) *WebhookResponse {
 
 	return &WebhookResponse{
@@ -42,7 +46,8 @@ func ParseWebhookResponse(u url.Values) *WebhookResponse {
 
 }
 
-func (c *Config) CreatePaymentURL(p *PaymentURLRequest) (*paymenturlok, error) {
+// CreatePaymentURL creates a new Payment URL
+func (c *Config) CreatePaymentURL(p *PaymentURLRequest) (*PaymentURLResponse, error) {
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -66,7 +71,7 @@ func (c *Config) CreatePaymentURL(p *PaymentURLRequest) (*paymenturlok, error) {
 
 	switch resp.StatusCode {
 	case 201:
-		s := &paymenturlok{}
+		s := &PaymentURLResponse{}
 		err := json.NewDecoder(resp.Body).Decode(s)
 		if err != nil {
 			return nil, err
@@ -74,7 +79,7 @@ func (c *Config) CreatePaymentURL(p *PaymentURLRequest) (*paymenturlok, error) {
 
 		return s, nil
 	case 400:
-		s := &badrequest{}
+		s := &BadRequest{}
 
 		err := json.NewDecoder(resp.Body).Decode(s)
 		if err != nil {
@@ -84,7 +89,7 @@ func (c *Config) CreatePaymentURL(p *PaymentURLRequest) (*paymenturlok, error) {
 		return nil, s
 
 	case 401:
-		s := &unauthorized{}
+		s := &Unauthorized{}
 		err := json.NewDecoder(resp.Body).Decode(s)
 		if err != nil {
 			return nil, err
