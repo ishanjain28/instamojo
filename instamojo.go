@@ -66,6 +66,16 @@ func (c *Config) makeRequest(m, url string, body io.Reader) (*http.Response, err
 		return nil, err
 	}
 
+	// Handle the irrecoverable errors here
+	switch resp.StatusCode {
+	case 404:
+		return nil, fmt.Errorf("404 Not Found")
+	case 500, 502, 504:
+		return nil, fmt.Errorf("internal server error")
+	case 403:
+		return nil, fmt.Errorf("insufficient permissions")
+	}
+
 	return resp, nil
 
 }
@@ -141,7 +151,7 @@ func (c *Config) ListRequests() (*RequestsList, error) {
 			return nil, err
 		}
 
-		return nil, r
+		return r, nil
 
 	case 401:
 		u := &Unauthorized{}
