@@ -88,3 +88,28 @@ type WebhookResponse struct {
 	PaymentRequestID string `json:"payment_request_id"`
 	Mac              string `json:"mac"`
 }
+
+//Requests List is the list of all the requests created so far
+type RequestsList struct {
+	Success         bool `json:"success"`
+	PaymentRequests []struct {
+		ID                    string      `json:"id"`
+		Phone                 string      `json:"phone"`
+		Email                 string      `json:"email"`
+		BuyerName             string      `json:"buyer_name"`
+		Amount                string      `json:"amount"`
+		Purpose               string      `json:"purpose"`
+		Status                string      `json:"status"`
+		SendSms               bool        `json:"send_sms"`
+		SendEmail             bool        `json:"send_email"`
+		SmsStatus             string      `json:"sms_status"`
+		EmailStatus           string      `json:"email_status"`
+		Shorturl              interface{} `json:"shorturl"`
+		Longurl               string      `json:"longurl"`
+		RedirectURL           string      `json:"redirect_url"`
+		Webhook               string      `json:"webhook"`
+		CreatedAt             time.Time   `json:"created_at"`
+		ModifiedAt            time.Time   `json:"modified_at"`
+		AllowRepeatedPayments bool        `json:"allow_repeated_payments"`
+	} `json:"payment_requests"`
+}

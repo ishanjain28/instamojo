@@ -5,6 +5,7 @@ package instamojo
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -46,6 +47,29 @@ func ParseWebhookResponse(u url.Values) *WebhookResponse {
 
 }
 
+func (c *Config) makeRequest(m, url string, body io.Reader) (*http.Response, error) {
+
+	req, err := http.NewRequest(m, url, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("X-Api-Key", c.ApiKey)
+	req.Header.Set("X-Auth-Token", c.AuthToken)
+
+	if m == "POST" {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+
+}
+
 // CreatePaymentURL creates a new Payment URL
 func (c *Config) CreatePaymentURL(p *PaymentURLRequest) (*PaymentURLResponse, error) {
 
@@ -54,16 +78,8 @@ func (c *Config) CreatePaymentURL(p *PaymentURLRequest) (*PaymentURLResponse, er
 		return nil, fmt.Errorf("error in marshalling PaymentURLRequest: %v", err)
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/1.1/payment-requests/", c.endpoint), strings.NewReader(string(b)))
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("X-Api-Key", c.ApiKey)
-	req.Header.Set("X-Auth-Token", c.AuthToken)
-	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	resp, err := c.makeRequest("POST", fmt.Sprintf("%s/api/1.1/payment-requests/", c.endpoint), strings.NewReader(string(b)))
 
-	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -97,10 +113,51 @@ func (c *Config) CreatePaymentURL(p *PaymentURLRequest) (*PaymentURLResponse, er
 		return nil, s
 	default:
 
-		fmt.Println(resp.StatusCode)
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+
 		return nil, fmt.Errorf("unrecognized response from instamojo: %s", string(b))
 	}
 
+	return nil, nil
+}
+
+//ListRequests returns a array of all the lists created so far
+func (c *Config) ListRequests() (*RequestsList, error) {
+
+	resp, err := c.makeRequest("GET", fmt.Sprintf("%s/api/1.1/payment-requests/", c.endpoint), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		r := &RequestsList{}
+		err := json.NewDecoder(resp.Body).Decode(r)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, r
+
+	case 401:
+		u := &Unauthorized{}
+		err := json.NewDecoder(resp.Body).Decode(u)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, u
+	default:
+
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("unrecognized response from instamojo: %s", string(b))
+	}
 	return nil, nil
 }
