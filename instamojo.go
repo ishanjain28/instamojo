@@ -3,6 +3,7 @@
 package instamojo
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -43,8 +44,8 @@ func ParseWebhookResponse(u url.Values) *WebhookResponse {
 		BuyerName:        u.Get("buyer_name"),
 		BuyerPhone:       u.Get("buyer_phone"),
 		PaymentRequestID: u.Get("payment_request_id"),
+		Mac:              u.Get("mac"),
 	}
-
 }
 
 func (c *Config) makeRequest(m, url string, body io.Reader) (*http.Response, error) {
@@ -108,11 +109,9 @@ func (c *Config) CreatePaymentURL(p *PaymentURLRequest) (*PaymentURLResponse, er
 		return nil, badrequest(resp)
 	case 401:
 		return nil, unauthorized(resp)
-	default:
-		return nil, defaultResponse(resp)
 	}
 
-	return nil, nil
+	return nil, defaultResponse(resp)
 }
 
 //ListRequests returns a array of all the lists created so far
@@ -138,10 +137,9 @@ func (c *Config) ListRequests() (*RequestsList, error) {
 		return nil, badrequest(resp)
 	case 401:
 		return nil, unauthorized(resp)
-	default:
-		return nil, defaultResponse(resp)
 	}
-	return nil, nil
+
+	return nil, defaultResponse(resp)
 }
 
 // PaymentRequestDetails fetches details about a payment request ID
@@ -167,16 +165,19 @@ func (c *Config) PaymentRequestDetails(id string) (*PaymentRequestDetails, error
 		return nil, badrequest(resp)
 	case 401:
 		return nil, unauthorized(resp)
-	default:
-		return nil, defaultResponse(resp)
 	}
 
-	return nil, nil
+	return nil, defaultResponse(resp)
 }
 
 // CreateRefundRequest creates a refund request
 func (c *Config) CreateRefundRequest(r *CreateRefundRequest) (*CreateRefundResponse, error) {
-	resp, err := c.makeRequest("POST", fmt.Sprintf("%s/api/1.1/refunds"), strings.NewReader())
+	var buf bytes.Buffer
+	err := json.NewDecoder(&buf).Decode(r)
+	if err != nil {
+		return nil, fmt.Errorf("Error in decoding CreateRefundRequest")
+	}
+	resp, err := c.makeRequest("POST", fmt.Sprintf("%s/api/1.1/refunds", c.endpoint), strings.NewReader(string(buf.Bytes())))
 	if err != nil {
 		return nil, err
 	}
@@ -195,10 +196,9 @@ func (c *Config) CreateRefundRequest(r *CreateRefundRequest) (*CreateRefundRespo
 		return nil, badrequest(resp)
 	case 401:
 		return nil, unauthorized(resp)
-	default:
-		return nil, defaultResponse(resp)
 	}
-	return nil, nil
+
+	return nil, defaultResponse(resp)
 }
 
 // ListRefunds returns a list of all the refunds made so far
@@ -222,11 +222,9 @@ func (c *Config) ListRefunds() (*RefundsList, error) {
 		return nil, badrequest(resp)
 	case 401:
 		return nil, unauthorized(resp)
-	default:
-		return nil, defaultResponse(resp)
 	}
 
-	return nil, nil
+	return nil, defaultResponse(resp)
 }
 
 // RefundDetails can be used to retrieve details about a refund
@@ -249,11 +247,9 @@ func (c *Config) RefundDetails(refundID string) (*RefundDetails, error) {
 		return nil, badrequest(resp)
 	case 401:
 		return nil, unauthorized(resp)
-	default:
-		return nil, defaultResponse(resp)
 	}
 
-	return nil, nil
+	return nil, defaultResponse(resp)
 }
 
 // PaymentDetails is used to fetch details about a payment
@@ -280,11 +276,9 @@ func (c *Config) PaymentDetails(paymentID string) (*PaymentDetails, error) {
 		return nil, badrequest(resp)
 	case 401:
 		return nil, unauthorized(resp)
-	default:
-		return nil, defaultResponse(resp)
 	}
 
-	return nil, nil
+	return nil, defaultResponse(resp)
 }
 
 // DisableRequest disables a Payment Request
@@ -309,10 +303,9 @@ func (c *Config) DisableRequest(paymentRequestID string) (*successResponse, erro
 		return nil, badrequest(resp)
 	case 401:
 		return nil, unauthorized(resp)
-	default:
-		return nil, defaultResponse(resp)
 	}
-	return nil, nil
+
+	return nil, defaultResponse(resp)
 }
 
 // EnableRequest enables a Payment Request
@@ -337,10 +330,9 @@ func (c *Config) EnableRequest(paymentRequestID string) (*successResponse, error
 		return nil, badrequest(resp)
 	case 401:
 		return nil, unauthorized(resp)
-	default:
-		return nil, defaultResponse(resp)
 	}
-	return nil, nil
+
+	return nil, defaultResponse(resp)
 }
 
 func badrequest(resp *http.Response) error {
