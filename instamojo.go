@@ -105,30 +105,11 @@ func (c *Config) CreatePaymentURL(p *PaymentURLRequest) (*PaymentURLResponse, er
 
 		return s, nil
 	case 400:
-		s := &BadRequest{}
-
-		err := json.NewDecoder(resp.Body).Decode(s)
-		if err != nil {
-			return nil, err
-		}
-
-		return nil, s
-
+		return nil, badrequest(resp)
 	case 401:
-		s := &Unauthorized{}
-		err := json.NewDecoder(resp.Body).Decode(s)
-		if err != nil {
-			return nil, err
-		}
-		return nil, s
+		return nil, unauthorized(resp)
 	default:
-
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-
-		return nil, fmt.Errorf("unrecognized response from instamojo: %s", string(b))
+		return nil, defaultResponse(resp)
 	}
 
 	return nil, nil
@@ -153,21 +134,12 @@ func (c *Config) ListRequests() (*RequestsList, error) {
 
 		return r, nil
 
+	case 400:
+		return nil, badrequest(resp)
 	case 401:
-		u := &Unauthorized{}
-		err := json.NewDecoder(resp.Body).Decode(u)
-		if err != nil {
-			return nil, err
-		}
-
-		return nil, u
+		return nil, unauthorized(resp)
 	default:
-
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		return nil, fmt.Errorf("unrecognized response from instamojo: %s", string(b))
+		return nil, defaultResponse(resp)
 	}
 	return nil, nil
 }
@@ -191,18 +163,12 @@ func (c *Config) PaymentRequestDetails(id string) (*PaymentRequestDetails, error
 		}
 		return prd, nil
 
+	case 400:
+		return nil, badrequest(resp)
 	case 401:
-		e := &Unauthorized{}
-		err := json.NewDecoder(resp.Body).Decode(e)
-		if err != nil {
-			return nil, err
-		}
+		return nil, unauthorized(resp)
 	default:
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		return nil, fmt.Errorf("unrecognized response from instamojo: %s", string(b))
+		return nil, defaultResponse(resp)
 	}
 
 	return nil, nil
@@ -225,28 +191,11 @@ func (c *Config) CreateRefundRequest(r *CreateRefundRequest) (*CreateRefundRespo
 
 		return crr, nil
 	case 400:
-
-		br := &BadRequest{}
-		err := json.NewDecoder(resp.Body).Decode(br)
-		if err != nil {
-			return nil, err
-		}
-		return nil, br
-
+		return nil, badrequest(resp)
 	case 401:
-		u := &Unauthorized{}
-		err := json.NewDecoder(resp.Body).Decode(u)
-		if err != nil {
-			return nil, err
-		}
-		return nil, u
+		return nil, unauthorized(resp)
 	default:
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		return nil, fmt.Errorf("unrecognized response from instamojo: %s", string(b))
-
+		return nil, defaultResponse(resp)
 	}
 	return nil, nil
 }
@@ -267,20 +216,12 @@ func (c *Config) ListRefunds() (*RefundsList, error) {
 			return nil, err
 		}
 		return rl, nil
+	case 400:
+		return nil, badrequest(resp)
 	case 401:
-		e := &Unauthorized{}
-		err := json.Decoder(resp.Body).Decode(e)
-		if err != nil {
-			return nil, err
-		}
-		return nil, e
+		return nil, unauthorized(resp)
 	default:
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		return nil, fmt.Errorf("unrecognized response from instamojo: %s", string(b))
-
+		return nil, defaultResponse(resp)
 	}
 
 	return nil, nil
@@ -301,21 +242,12 @@ func (c *Config) RefundDetails(id string) (*RefundDetails, error) {
 			return nil, err
 		}
 		return rd, nil
+	case 400:
+		return nil, badrequest(resp)
 	case 401:
-		u := &Unauthorized{}
-		err := json.NewDecoder(resp.Body).Decode(u)
-		if err != nil {
-			return nil, err
-		}
-		return nil, u
-
+		return nil, unauthorized(resp)
 	default:
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		return nil, fmt.Errorf("unrecognized response from instamojo: %s", string(b))
-
+		return nil, defaultResponse(resp)
 	}
 
 	return nil, nil
@@ -338,20 +270,12 @@ func (c *Config) PaymentDetails(id string) (*PaymentDetails, error) {
 		}
 
 		return pd, nil
+	case 400:
+		return nil, badrequest(resp)
 	case 401:
-		u := &Unauthorized{}
-		err := json.NewDecoder(resp.Body).Decode(u)
-		if err != nil {
-			return nil, err
-		}
-		return nil, u
+		return nil, unauthorized(resp)
 	default:
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		return nil, fmt.Errorf("unrecognized response from instamojo: %s", string(b))
-
+		return nil, defaultResponse(resp)
 	}
 
 	return nil, nil
@@ -375,19 +299,11 @@ func (c *Config) DisableRequest(id string) (*successResponse, error) {
 
 		return sr, nil
 	case 400:
-		br := &BadRequest{}
-		err := json.NewDecoder(resp.Body).Decode(br)
-		if err != nil {
-			return nil, err
-		}
-		return nil, br
+		return nil, badrequest(resp)
 	case 401:
-		u := &Unauthorized{}
-		err := json.NewDecoder(resp.Body).Decode(u)
-		if err != nil {
-			return nil, err
-		}
-		return nil, u
+		return nil, unauthorized(resp)
+	default:
+		return nil, defaultResponse(resp)
 	}
 	return nil, nil
 }
@@ -410,19 +326,38 @@ func (c *Config) EnableRequest(id string) (*successResponse, error) {
 
 		return sr, nil
 	case 400:
-		br := &BadRequest{}
-		err := json.NewDecoder(resp.Body).Decode(br)
-		if err != nil {
-			return nil, err
-		}
-		return nil, br
+		return nil, badrequest(resp)
 	case 401:
-		u := &Unauthorized{}
-		err := json.NewDecoder(resp.Body).Decode(u)
-		if err != nil {
-			return nil, err
-		}
-		return nil, u
+		return nil, unauthorized(resp)
+	default:
+		return nil, defaultResponse(resp)
 	}
 	return nil, nil
+}
+
+func badrequest(resp *http.Response) error {
+	br := &BadRequest{}
+	err := json.NewDecoder(resp.Body).Decode(br)
+	if err != nil {
+		return err
+	}
+	return br
+}
+
+func unauthorized(resp *http.Response) error {
+	u := &Unauthorized{}
+	err := json.NewDecoder(resp.Body).Decode(u)
+	if err != nil {
+		return err
+	}
+	return u
+}
+
+func defaultResponse(resp *http.Response) error {
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	return fmt.Errorf("unrecognized response from instamojo: %s", string(b))
+
 }
