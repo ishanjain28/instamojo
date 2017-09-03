@@ -172,7 +172,7 @@ type PaymentRequestDetails struct {
 	Success bool `json:"success"`
 }
 
-// CreateRefundResponse is the data required to create a new Refund request.
+// CreateRefundRequest is the data required to create a new Refund request.
 // All fields are not necessary, Head over to instamojo docs for more more information
 type CreateRefundRequest struct {
 	PaymentID    string `json:"payment_id"`
