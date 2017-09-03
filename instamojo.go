@@ -1,4 +1,4 @@
-// This package aims to provide a Wrapper for instamojo.com's API
+// Package instamojo aims to provide a Wrapper for instamojo.com's API
 // It is a work in progress and all remaining endpoints shall be added soon
 package instamojo
 
@@ -14,7 +14,7 @@ import (
 
 // Init initialises a new Config from the provided settings
 func Init(c *Config) (*Config, error) {
-	if c.ApiKey == "" || c.AuthToken == "" {
+	if c.APIKey == "" || c.AuthToken == "" {
 		return nil, fmt.Errorf("invalid tokens")
 	}
 
@@ -53,7 +53,7 @@ func (c *Config) makeRequest(m, url string, body io.Reader) (*http.Response, err
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("X-Api-Key", c.ApiKey)
+	req.Header.Set("X-Api-Key", c.APIKey)
 	req.Header.Set("X-Auth-Token", c.AuthToken)
 
 	if m == "POST" {
@@ -168,6 +168,261 @@ func (c *Config) ListRequests() (*RequestsList, error) {
 			return nil, err
 		}
 		return nil, fmt.Errorf("unrecognized response from instamojo: %s", string(b))
+	}
+	return nil, nil
+}
+
+// PaymentDetails fetches details about a payment ID
+func (c *Config) PaymentRequestDetails(id string) (*PaymentRequestDetails, error) {
+
+	resp, err := c.makeRequest("GET", fmt.Sprintf("%s/api/1.1/payment-requests/%s", c.endpoint, id), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		prd := &PaymentRequestDetails{}
+		err := json.NewDecoder(resp.Body).Decode(prd)
+		if err != nil {
+			return nil, err
+		}
+		return prd, nil
+
+	case 401:
+		e := &Unauthorized{}
+		err := json.NewDecoder(resp.Body).Decode(e)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("unrecognized response from instamojo: %s", string(b))
+	}
+
+	return nil, nil
+}
+
+func (c *Config) CreateRefundRequest(r *CreateRefundRequest) (*CreateRefundResponse, error) {
+	resp, err := c.makeRequest("POST", fmt.Sprintf("%s/api/1.1/refunds"), strings.NewReader())
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 201:
+		crr := &CreateRefundResponse{}
+		err := json.NewDecoder(resp.Body).Decode(crr)
+		if err != nil {
+			return nil, err
+		}
+
+		return crr, nil
+	case 400:
+
+		br := &BadRequest{}
+		err := json.NewDecoder(resp.Body).Decode(br)
+		if err != nil {
+			return nil, err
+		}
+		return nil, br
+
+	case 401:
+		u := &Unauthorized{}
+		err := json.NewDecoder(resp.Body).Decode(u)
+		if err != nil {
+			return nil, err
+		}
+		return nil, u
+	default:
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("unrecognized response from instamojo: %s", string(b))
+
+	}
+	return nil, nil
+}
+
+func (c *Config) ListRefunds() (*RefundsList, error) {
+	resp, err := c.makeRequest("GET", fmt.Sprintf("%s/api/1.1/refunds", c.endpoint), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		rl := &RefundsList{}
+		err := json.NewDecoder(resp.Body).Decode(rl)
+
+		if err != nil {
+			return nil, err
+		}
+		return rl, nil
+	case 401:
+		e := &Unauthorized{}
+		err := json.Decoder(resp.Body).Decode(e)
+		if err != nil {
+			return nil, err
+		}
+		return nil, e
+	default:
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("unrecognized response from instamojo: %s", string(b))
+
+	}
+
+	return nil, nil
+}
+
+func (c *Config) RefundDetails(id string) (*RefundDetails, error) {
+	resp, err := c.makeRequest("GET", fmt.Sprintf("%s/api/1.1/refunds/%s", c.endpoint, id), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		rd := &RefundDetails{}
+		err := json.NewDecoder(resp.Body).Decode(rd)
+		if err != nil {
+			return nil, err
+		}
+		return rd, nil
+	case 401:
+		u := &Unauthorized{}
+		err := json.NewDecoder(resp.Body).Decode(u)
+		if err != nil {
+			return nil, err
+		}
+		return nil, u
+
+	default:
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("unrecognized response from instamojo: %s", string(b))
+
+	}
+
+	return nil, nil
+}
+
+func (c *Config) PaymentDetails(id string) (*PaymentDetails, error) {
+
+	resp, err := c.makeRequest("GET", fmt.Sprintf("%s/api/1.1/payments/%s", c.endpoint, id), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		pd := &PaymentDetails{}
+		err := json.NewDecoder(resp.Body).Decode(pd)
+		if err != nil {
+			return nil, err
+		}
+
+		return pd, nil
+	case 401:
+		u := &Unauthorized{}
+		err := json.NewDecoder(resp.Body).Decode(u)
+		if err != nil {
+			return nil, err
+		}
+		return nil, u
+	default:
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("unrecognized response from instamojo: %s", string(b))
+
+	}
+
+	return nil, nil
+}
+
+func (c *Config) DisableRequest(id string) (*successResponse, error) {
+
+	resp, err := c.makeRequest("POST", fmt.Sprintf("%s/api/1.1/payment-requests/%s/disable", c.endpoint, id), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		sr := &successResponse{}
+		err := json.NewDecoder(resp.Body).Decode(sr)
+		if err != nil {
+			return nil, err
+		}
+
+		return sr, nil
+	case 400:
+		br := &BadRequest{}
+		err := json.NewDecoder(resp.Body).Decode(br)
+		if err != nil {
+			return nil, err
+		}
+		return nil, br
+	case 401:
+		u := &Unauthorized{}
+		err := json.NewDecoder(resp.Body).Decode(u)
+		if err != nil {
+			return nil, err
+		}
+		return nil, u
+	}
+	return nil, nil
+}
+
+func (c *Config) EnableRequest(id string) (*successResponse, error) {
+
+	resp, err := c.makeRequest("POST", fmt.Sprintf("%s/api/1.1/payment-requests/%s/enable", c.endpoint, id), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		sr := &successResponse{}
+		err := json.NewDecoder(resp.Body).Decode(sr)
+		if err != nil {
+			return nil, err
+		}
+
+		return sr, nil
+	case 400:
+		br := &BadRequest{}
+		err := json.NewDecoder(resp.Body).Decode(br)
+		if err != nil {
+			return nil, err
+		}
+		return nil, br
+	case 401:
+		u := &Unauthorized{}
+		err := json.NewDecoder(resp.Body).Decode(u)
+		if err != nil {
+			return nil, err
+		}
+		return nil, u
 	}
 	return nil, nil
 }
