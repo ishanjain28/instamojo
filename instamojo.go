@@ -144,7 +144,7 @@ func (c *Config) ListRequests() (*RequestsList, error) {
 	return nil, nil
 }
 
-// PaymentDetails fetches details about a payment ID
+// PaymentRequestDetails fetches details about a payment request ID
 func (c *Config) PaymentRequestDetails(id string) (*PaymentRequestDetails, error) {
 
 	resp, err := c.makeRequest("GET", fmt.Sprintf("%s/api/1.1/payment-requests/%s", c.endpoint, id), nil)
@@ -174,6 +174,7 @@ func (c *Config) PaymentRequestDetails(id string) (*PaymentRequestDetails, error
 	return nil, nil
 }
 
+// CreateRefundRequest creates a refund request
 func (c *Config) CreateRefundRequest(r *CreateRefundRequest) (*CreateRefundResponse, error) {
 	resp, err := c.makeRequest("POST", fmt.Sprintf("%s/api/1.1/refunds"), strings.NewReader())
 	if err != nil {
@@ -200,6 +201,7 @@ func (c *Config) CreateRefundRequest(r *CreateRefundRequest) (*CreateRefundRespo
 	return nil, nil
 }
 
+// ListRefunds returns a list of all the refunds made so far
 func (c *Config) ListRefunds() (*RefundsList, error) {
 	resp, err := c.makeRequest("GET", fmt.Sprintf("%s/api/1.1/refunds", c.endpoint), nil)
 	if err != nil {
@@ -227,8 +229,9 @@ func (c *Config) ListRefunds() (*RefundsList, error) {
 	return nil, nil
 }
 
-func (c *Config) RefundDetails(id string) (*RefundDetails, error) {
-	resp, err := c.makeRequest("GET", fmt.Sprintf("%s/api/1.1/refunds/%s", c.endpoint, id), nil)
+// RefundDetails can be used to retrieve details about a refund
+func (c *Config) RefundDetails(refundID string) (*RefundDetails, error) {
+	resp, err := c.makeRequest("GET", fmt.Sprintf("%s/api/1.1/refunds/%s", c.endpoint, refundID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -253,9 +256,12 @@ func (c *Config) RefundDetails(id string) (*RefundDetails, error) {
 	return nil, nil
 }
 
-func (c *Config) PaymentDetails(id string) (*PaymentDetails, error) {
+// PaymentDetails is used to fetch details about a payment
+// The difference b/w this and PaymentRequestDetails is that PaymentDetails is used to fetch details about successful payments
+// And PaymentRequestDetails is used to fetch details about a payment id
+func (c *Config) PaymentDetails(paymentID string) (*PaymentDetails, error) {
 
-	resp, err := c.makeRequest("GET", fmt.Sprintf("%s/api/1.1/payments/%s", c.endpoint, id), nil)
+	resp, err := c.makeRequest("GET", fmt.Sprintf("%s/api/1.1/payments/%s", c.endpoint, paymentID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -281,9 +287,10 @@ func (c *Config) PaymentDetails(id string) (*PaymentDetails, error) {
 	return nil, nil
 }
 
-func (c *Config) DisableRequest(id string) (*successResponse, error) {
+// DisableRequest disables a Payment Request
+func (c *Config) DisableRequest(paymentRequestID string) (*successResponse, error) {
 
-	resp, err := c.makeRequest("POST", fmt.Sprintf("%s/api/1.1/payment-requests/%s/disable", c.endpoint, id), nil)
+	resp, err := c.makeRequest("POST", fmt.Sprintf("%s/api/1.1/payment-requests/%s/disable", c.endpoint, paymentRequestID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -308,9 +315,10 @@ func (c *Config) DisableRequest(id string) (*successResponse, error) {
 	return nil, nil
 }
 
-func (c *Config) EnableRequest(id string) (*successResponse, error) {
+// EnableRequest enables a Payment Request
+func (c *Config) EnableRequest(paymentRequestID string) (*successResponse, error) {
 
-	resp, err := c.makeRequest("POST", fmt.Sprintf("%s/api/1.1/payment-requests/%s/enable", c.endpoint, id), nil)
+	resp, err := c.makeRequest("POST", fmt.Sprintf("%s/api/1.1/payment-requests/%s/enable", c.endpoint, paymentRequestID), nil)
 	if err != nil {
 		return nil, err
 	}
