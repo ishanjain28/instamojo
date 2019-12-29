@@ -21,7 +21,6 @@ func (u Unauthorized) Error() string {
 }
 
 func (b BadRequest) Error() string {
-
 	for _, v := range b.Message {
 		return v[0].(string)
 	}
@@ -175,10 +174,11 @@ type PaymentRequestDetails struct {
 // CreateRefundRequest is the data required to create a new Refund request.
 // All fields are not necessary, Head over to instamojo docs for more more information
 type CreateRefundRequest struct {
-	PaymentID    string `json:"payment_id"`
-	Type         string `json:"type"`
-	RefundAmount string `json:"refund_amount"`
-	Body         string `json:"body"`
+	TransactionID string `json:"transaction_id"`
+	PaymentID     string `json:"payment_id"`
+	Type          string `json:"type"`
+	RefundAmount  string `json:"refund_amount"`
+	Body          string `json:"body"`
 }
 
 // CreateRefundResponse is the response that is returned when a refund request is created successfully
